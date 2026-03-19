@@ -1,39 +1,19 @@
-const products = [
-  {
-    id: 1,
-    name: "Hoa Hồng",
-    description: "Hoa hồng đỏ tươi, biểu tượng của tình yêu",
-    price: 200000,
-    image: "/images/rose.jpg",
-  },
-  {
-    id: 2,
-    name: "Hoa Cẩm Tú Cầu",
-    description: "Hoa cẩm tú cầu hương thơm dễ chịu",
-    price: 220000,
-    image: "/images/CamTuCau.jpg",
-  },
-  {
-    id: 3,
-    name: "Hoa Ly",
-    description: "Hoa ly trắng tinh khôi, sang trọng",
-    price: 250000,
-    image: "/images/Hoa1.jpg",
-  },
-  {
-    id: 4,
-    name: "Hoa Tulip",
-    description: "Hoa tulip nhiều màu sắc rực rỡ",
-    price: 180000,
-    image: "/images/Hoa 2.jpg",
-  },
-  {
-    id: 5,
-    name: "Hoa Sen",
-    description: "Hoa sen trắng tinh khôi, thanh cao",
-    price: 300000,
-    image: "/images/HoaSen.jpg",
-  },
-];
+const mongoose = require("mongoose");
 
-module.exports = products;
+const ProductSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    price: { type: Number, required: true, min: 0 },
+    description: { type: String },
+    category: { type: String },
+    stock: { type: Number, min: 0, default: 0 },
+
+    image: { type: String, default: "/uploads/anh-san-pham.jpg" },
+  },
+  {
+    collection: "products",
+    timestamps: true,
+  },
+);
+
+module.exports = mongoose.model("Product", ProductSchema);
