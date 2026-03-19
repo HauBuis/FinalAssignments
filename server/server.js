@@ -40,6 +40,11 @@ function isMongoConnected() {
   return mongoose.connection.readyState === 1;
 }
 
+function escapeRegExp(str) {
+  // Escape ký tự đặc biệt để dùng an toàn trong RegExp
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function normalizeImagePath(image) {
   // Chỉ phục vụ ảnh qua express.static("public") => path phải là dạng "/images/..."
   if (typeof image === "string" && image.startsWith("/images/")) return image;
@@ -83,8 +88,15 @@ app.get("/api/products", async (req, res) => {
   try {
     if (!isMongoConnected()) return res.status(503).json([]);
 
-    console.log("API /api/products called (from MongoDB)");
-    const items = await Product.find({}).lean();
+    const q = (req.query.q || "").trim();
+    const filter = {};
+    if (q) {
+      const pattern = new RegExp(escapeRegExp(q), "i");
+      filter.$or = [{ name: pattern }, { description: pattern }];
+    }
+
+    console.log("API /api/products called (from MongoDB)", { q: q || undefined });
+    const items = await Product.find(filter).lean();
     // Trả về thêm `id` để frontend dùng `product.id` thay vì `_id`
     const mapped = items.map((p) => ({
       ...p,

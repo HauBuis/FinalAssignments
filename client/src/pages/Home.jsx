@@ -7,6 +7,7 @@ function Home() {
   const [products, setProducts] = useState([]);
   const API_BASE = "http://localhost:5000";
 
+  const [searchTerm, setSearchTerm] = useState("");
   const [newProduct, setNewProduct] = useState({
     name: "",
     price: "",
@@ -21,14 +22,29 @@ function Home() {
     loadProducts();
   }, []);
 
-  async function loadProducts() {
+  async function loadProducts(term = "") {
     try {
-      const res = await fetch(`${API_BASE}/api/products`);
+      const url =
+        term && term.trim()
+          ? `${API_BASE}/api/products?q=${encodeURIComponent(term.trim())}`
+          : `${API_BASE}/api/products`;
+
+      const res = await fetch(url);
       const data = await res.json();
       setProducts(data);
     } catch (err) {
       console.error("Lỗi fetch API:", err);
     }
+  }
+
+  function handleSearch(e) {
+    e.preventDefault();
+    loadProducts(searchTerm);
+  }
+
+  function handleResetSearch() {
+    setSearchTerm("");
+    loadProducts("");
   }
 
   async function handleCreate(e) {
@@ -125,6 +141,26 @@ function Home() {
       <div className="main-content">
         <Sidebar />
         <div className="product-area">
+          <form className="search-form" onSubmit={handleSearch}>
+            <input
+              className="crud-input"
+              placeholder="Tìm theo tên hoặc mô tả..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button className="crud-button" type="submit" disabled={loading}>
+              Tìm kiếm
+            </button>
+            <button
+              className="crud-button crud-button-secondary"
+              type="button"
+              onClick={handleResetSearch}
+              disabled={loading}
+            >
+              Xóa tìm
+            </button>
+          </form>
+
           <form className="crud-form" onSubmit={handleCreate}>
             <h2>CRUD Products</h2>
 
