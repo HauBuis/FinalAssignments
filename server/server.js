@@ -10,7 +10,7 @@ const fs = require("fs");
 dotenv.config({ path: path.join(__dirname, ".env") });
 
 // `server/data/products.js` đang đóng vai trò schema/model Mongoose
-const Product = require("./data/products");
+const Product = require("./db/products");
 
 const app = express();
 
@@ -26,7 +26,8 @@ async function connectMongo() {
   const hasEnv = Boolean(process.env.MONGODB_URI);
   const mongoURI =
     process.env.MONGODB_URI ||
-    "mongodb+srv://vutuan2004vn_db_user:mnSGgqaO17Dg4eD9@cluster0.obafjy1.mongodb.net/?appName=Cluster0";
+    "mongodb+srv://conghau0704900193_db_user:0862049637@flower.ldto7ql.mongodb.net/?appName=Flower"
+    ;
   try {
     console.log("MONGODB_URI loaded from .env:", hasEnv ? "yes" : "no");
     await mongoose.connect(mongoURI);
