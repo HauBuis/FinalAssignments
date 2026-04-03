@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import SearchBar from "../components/SearchBar";
 
-function Products({ onNavigate }) {
+function Products() {
+  const navigate = useNavigate();
   const API_BASE = "http://localhost:5000";
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -97,7 +99,7 @@ function Products({ onNavigate }) {
                 )}
                 <button
                   className="view-detail-btn"
-                  onClick={() => onNavigate("detail", product.id)}
+                  onClick={() => navigate(`/detail/${product.id}`)}
                 >
                   Xem chi tiết
                 </button>

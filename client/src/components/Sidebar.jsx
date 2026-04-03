@@ -1,10 +1,22 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-function Sidebar({ currentPage, onNavigate }) {
+function Sidebar({ currentPage }) {
+  const navigate = useNavigate();
   const [expandedMenu, setExpandedMenu] = useState(null);
 
   const toggleMenu = (menuName) => {
     setExpandedMenu(expandedMenu === menuName ? null : menuName);
+  };
+
+  const isActive = (page) => {
+    if (page === "products") {
+      return currentPage === "products" || currentPage === "detail" || currentPage === "search";
+    }
+    if (page === "admin") {
+      return currentPage === "admin";
+    }
+    return currentPage === page;
   };
 
   return (
@@ -16,8 +28,8 @@ function Sidebar({ currentPage, onNavigate }) {
       <nav className="sidebar-nav">
         {/* Trang chủ */}
         <button
-          className={`sidebar-link ${currentPage === "home" ? "active" : ""}`}
-          onClick={() => onNavigate("home")}
+          className={`sidebar-link ${isActive("home") ? "active" : ""}`}
+          onClick={() => navigate("/")}
         >
           Trang chủ
         </button>
@@ -25,10 +37,10 @@ function Sidebar({ currentPage, onNavigate }) {
         {/* Sản phẩm */}
         <div className="sidebar-group">
           <button
-            className={`sidebar-link group-title ${currentPage === "products" ? "active" : ""}`}
+            className={`sidebar-link group-title ${isActive("products") ? "active" : ""}`}
             onClick={() => {
               toggleMenu("products");
-              onNavigate("products");
+              navigate("/products");
             }}
           >
             <span>Sản phẩm</span>
@@ -37,13 +49,13 @@ function Sidebar({ currentPage, onNavigate }) {
 
           {expandedMenu === "products" && (
             <div className="submenu">
-              <button className="submenu-link" onClick={() => onNavigate("products")}>
+              <button className="submenu-link" onClick={() => navigate("/products")}>
                 Tất cả sản phẩm
               </button>
-              <button className="submenu-link" onClick={() => onNavigate("products")}>
+              <button className="submenu-link" onClick={() => navigate("/products")}>
                 Bánh ngọt
               </button>
-              <button className="submenu-link" onClick={() => onNavigate("products")}>
+              <button className="submenu-link" onClick={() => navigate("/products")}>
                 Kẹo & Snack
               </button>
             </div>
@@ -53,10 +65,10 @@ function Sidebar({ currentPage, onNavigate }) {
         {/* Admin */}
         <div className="sidebar-group">
           <button
-            className={`sidebar-link group-title ${currentPage === "admin" ? "active" : ""}`}
+            className={`sidebar-link group-title ${isActive("admin") ? "active" : ""}`}
             onClick={() => {
               toggleMenu("admin");
-              onNavigate("admin");
+              navigate("/admin/add");
             }}
           >
             <span>Admin</span>
@@ -65,13 +77,13 @@ function Sidebar({ currentPage, onNavigate }) {
 
           {expandedMenu === "admin" && (
             <div className="submenu">
-              <button className="submenu-link" onClick={() => onNavigate("admin","add")}>
+              <button className="submenu-link" onClick={() => navigate("/admin/add")}>
                 Thêm sản phẩm
               </button>
-              <button className="submenu-link" onClick={() => onNavigate("admin","update")}>
+              <button className="submenu-link" onClick={() => navigate("/admin/update")}>
                 Cập nhật sản phẩm
               </button>
-              <button className="submenu-link" onClick={() => onNavigate("admin","delete")}>
+              <button className="submenu-link" onClick={() => navigate("/admin/delete")}>
                 Xóa sản phẩm
               </button>
             </div>
@@ -81,7 +93,7 @@ function Sidebar({ currentPage, onNavigate }) {
         {/* Liên hệ */}
         <button
           className="sidebar-link"
-          onClick={() => onNavigate("home")}
+          onClick={() => navigate("/")}
         >
           Liên hệ
         </button>
@@ -89,7 +101,7 @@ function Sidebar({ currentPage, onNavigate }) {
         {/* Tìm kiếm */}
         <button
           className="sidebar-link"
-          onClick={() => onNavigate("products")}
+          onClick={() => navigate("/products")}
         >
           Tìm kiếm
         </button>

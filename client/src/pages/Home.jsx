@@ -1,6 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
-function Home({ onNavigate }) {
+function Home() {
+  const navigate = useNavigate();
+
   return (
     <div className="home-page">
       <section className="hero">
@@ -8,7 +11,7 @@ function Home({ onNavigate }) {
         <p>Những chiếc bánh ngọt và kẹo tuyệt vời nhất cho bạn</p>
         <button
           className="cta-button"
-          onClick={() => onNavigate("products")}
+          onClick={() => navigate("/products")}
         >
           Xem sản phẩm
         </button>

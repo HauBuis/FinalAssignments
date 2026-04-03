@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
 import "./App.css";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
@@ -9,41 +10,32 @@ import ProductDetail from "./components/ProductDetail";
 import Admin from "./pages/Admin";
 
 function App() {
-  const [currentPage, setCurrentPage] = useState("home");
-  const [selectedProductId, setSelectedProductId] = useState(null);
-  const [adminMode, setAdminMode] = useState("add");
+  const location = useLocation();
 
-  const handlePageChange = (page, option = null) => {
-    setCurrentPage(page);
-    if (page === "admin" && option) {
-      setAdminMode(option);
-    }
-    if (page === "detail" && option) {
-      setSelectedProductId(option);
-    }
+  // Determine current page from location path for sidebar highlighting
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    if (path === "/") return "home";
+    if (path === "/products") return "products";
+    if (path.startsWith("/detail")) return "detail";
+    if (path.startsWith("/admin")) return "admin";
+    return "home";
   };
+
+  const currentPage = getCurrentPage();
 
   return (
     <div className="app-layout">
       <Header />
-      <Sidebar currentPage={currentPage} onNavigate={handlePageChange} />
+      <Sidebar currentPage={currentPage} />
 
       <div className="main-content">
-        {currentPage === "home" && (
-          <Home onNavigate={handlePageChange} />
-        )}
-        {currentPage === "products" && (
-          <Products onNavigate={handlePageChange} />
-        )}
-        {currentPage === "detail" && selectedProductId && (
-          <ProductDetail
-            productId={selectedProductId}
-            onNavigate={handlePageChange}
-          />
-        )}
-        {currentPage === "admin" && (
-          <Admin onNavigate={handlePageChange} mode={adminMode} />
-        )}
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/detail/:id" element={<ProductDetail />} />
+          <Route path="/admin/:mode" element={<Admin />} />
+        </Routes>
       </div>
 
       <Footer />

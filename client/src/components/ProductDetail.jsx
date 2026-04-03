@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 
-function ProductDetail({ productId, onNavigate }) {
+function ProductDetail() {
+  const { id: productId } = useParams();
+  const navigate = useNavigate();
   const API_BASE = "http://localhost:5000";
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,7 +23,7 @@ function ProductDetail({ productId, onNavigate }) {
       }
     }
     loadProduct();
-  }, [productId]);
+  }, [productId, API_BASE]);
 
   if (loading) {
     return <div className="loading">Đang tải...</div>;
@@ -30,7 +33,7 @@ function ProductDetail({ productId, onNavigate }) {
     return (
       <div className="product-detail-page">
         <p>Không tìm thấy sản phẩm</p>
-        <button onClick={() => onNavigate("products")}>Quay lại</button>
+        <button onClick={() => navigate("/products")}>Quay lại</button>
       </div>
     );
   }
@@ -39,7 +42,7 @@ function ProductDetail({ productId, onNavigate }) {
     <div className="product-detail-page">
       <button
         className="back-button"
-        onClick={() => onNavigate("products")}
+        onClick={() => navigate("/products")}
       >
         ← Quay lại
       </button>
