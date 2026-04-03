@@ -1,36 +1,42 @@
 import React from "react";
 
-function Sidebar() {
+function Sidebar({ currentPage, onNavigate }) {
   return (
-    <div className="sidebar">
-      <h3>Menu</h3>
+    <aside className="sidebar">
+      <div className="sidebar-logo">
+        <h2>Menu</h2>
+      </div>
 
-      <ul>
-        <li>
-          <a href="/">Home</a>
-        </li>
+      <nav className="sidebar-nav">
+        <button
+          className={`sidebar-link ${currentPage === "home" ? "active" : ""}`}
+          onClick={() => onNavigate("home")}
+        >
+          🏠 Trang chủ
+        </button>
 
-        <li>Products</li>
-        <li style={{ paddingLeft: "20px" }}>
-          <a href="/products/fresh">Hoa tươi</a>
-        </li>
-        <li style={{ paddingLeft: "20px" }}>
-          <a href="/products/dried">Hoa sáp</a>
-        </li>
+        <button
+          className={`sidebar-link ${currentPage === "products" ? "active" : ""}`}
+          onClick={() => onNavigate("products")}
+        >
+          🍰 Sản phẩm
+        </button>
 
-        <li>Cart</li>
-        <li style={{ paddingLeft: "20px" }}>
-          <a href="/cart">Giỏ hàng</a>
-        </li>
-        <li style={{ paddingLeft: "20px" }}>
-          <a href="/checkout">Thanh toán</a>
-        </li>
+        <button
+          className={`sidebar-link ${currentPage === "admin" ? "active" : ""}`}
+          onClick={() => onNavigate("admin")}
+        >
+          ⚙️ Admin
+        </button>
 
-        <li>
-          <a href="/contact">Contact</a>
-        </li>
-      </ul>
-    </div>
+        <button
+          className="sidebar-link"
+          onClick={() => onNavigate("home")}
+        >
+          ℹ️ Liên hệ
+        </button>
+      </nav>
+    </aside>
   );
 }
 

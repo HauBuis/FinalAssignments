@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 
 function ProductCard({ product, onUpdate, onDelete }) {
   const productId = product?.id || product?._id;
-  const defaultImage = useMemo(() => "/images/hoa1.jpg", []);
+  const defaultImage = useMemo(() => "/images/cake1.jpg", []);
 
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({

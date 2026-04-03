@@ -49,7 +49,7 @@ function escapeRegExp(str) {
 function normalizeImagePath(image) {
   // Chỉ phục vụ ảnh qua express.static("public") => path phải là dạng "/images/..."
   if (typeof image === "string" && image.startsWith("/images/")) return image;
-  return "/images/hoa1.jpg";
+  return "/images/cake1.jpg";
 }
 
 function ensureDirSync(dirPath) {
@@ -111,6 +111,31 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
+app.get("/api/products/:id", async (req, res) => {
+  try {
+    if (!isMongoConnected()) return res.status(503).json({});
+
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid product id" });
+    }
+
+    const product = await Product.findById(id).lean();
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    res.json({
+      ...product,
+      id: product._id.toString(),
+      image: normalizeImagePath(product.image),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to load product" });
+  }
+});
+
 app.post("/api/products", upload.single("imageFile"), async (req, res) => {
   try {
     if (!isMongoConnected()) {
@@ -125,6 +150,22 @@ app.post("/api/products", upload.single("imageFile"), async (req, res) => {
     const body = req.body || {};
     if (body.price !== undefined) body.price = Number(body.price);
     if (body.stock !== undefined && body.stock !== "") body.stock = Number(body.stock);
+    
+    // Parse tags, events, type từ string sang array/object
+    if (body.tags && typeof body.tags === "string") {
+      body.tags = body.tags.split(",").map((t) => t.trim()).filter(Boolean);
+    }
+    if (body.events && typeof body.events === "string") {
+      body.events = body.events.split(",").map((e) => e.trim()).filter(Boolean);
+    }
+    if (body.type && typeof body.type === "string") {
+      try {
+        body.type = JSON.parse(body.type);
+      } catch (e) {
+        // nếu không phải JSON thì giữ nguyên
+      }
+    }
+
     const created = await Product.create(body);
     const obj = created.toObject();
     res.status(201).json({
@@ -160,6 +201,22 @@ app.put("/api/products/:id", upload.single("imageFile"), async (req, res) => {
     const body = req.body || {};
     if (body.price !== undefined) body.price = Number(body.price);
     if (body.stock !== undefined && body.stock !== "") body.stock = Number(body.stock);
+    
+    // Parse tags, events, type từ string sang array/object
+    if (body.tags && typeof body.tags === "string") {
+      body.tags = body.tags.split(",").map((t) => t.trim()).filter(Boolean);
+    }
+    if (body.events && typeof body.events === "string") {
+      body.events = body.events.split(",").map((e) => e.trim()).filter(Boolean);
+    }
+    if (body.type && typeof body.type === "string") {
+      try {
+        body.type = JSON.parse(body.type);
+      } catch (e) {
+        // nếu không phải JSON thì giữ nguyên
+      }
+    }
+
     const updated = await Product.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
