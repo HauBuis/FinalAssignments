@@ -89,6 +89,37 @@ function buildCategoryFilter(categoryValue) {
   };
 }
 
+function normalizeProductType(type) {
+  if (!type || typeof type !== "object") {
+    return type;
+  }
+
+  const rawId = String(type.id || "").trim().toUpperCase();
+  const rawName = String(type.name || "").trim().toLowerCase();
+
+  if (
+    ["BANH-NGOT", "T01", "T02", "T04", "T05", "T06"].includes(rawId) ||
+    rawName === "bánh ngọt"
+  ) {
+    return {
+      id: ["T01", "T02", "T04", "T05", "T06"].includes(rawId) ? rawId : "T01",
+      name: "Bánh ngọt",
+    };
+  }
+
+  if (
+    ["KEO-NGOT", "T03", "T07"].includes(rawId) ||
+    rawName === "kẹo ngọt"
+  ) {
+    return {
+      id: ["T03", "T07"].includes(rawId) ? rawId : "T03",
+      name: "Kẹo ngọt",
+    };
+  }
+
+  return type;
+}
+
 function normalizeImagePath(image) {
   if (typeof image === "string") {
     const trimmed = image.trim();
@@ -107,6 +138,56 @@ function normalizeImagePath(image) {
   }
 
   return "/images/cake1.jpg";
+}
+
+function sanitizeProductBody(body) {
+  if (!body || typeof body !== "object") {
+    return {};
+  }
+
+  const sanitizedBody = { ...body };
+  delete sanitizedBody.id;
+  delete sanitizedBody._id;
+
+  return sanitizedBody;
+}
+
+function mapProductResponse(product) {
+  if (!product) {
+    return product;
+  }
+
+  return {
+    ...product,
+    _id: product._id.toString(),
+    image: normalizeImagePath(product.image),
+  };
+}
+
+async function generateNextProductCode() {
+  const items = await Product.find(
+    { id: { $type: "string", $regex: /^SP\d+$/i } },
+    { id: 1 }
+  ).lean();
+
+  let maxNumber = 0;
+
+  for (const item of items) {
+    const match = String(item?.id || "").match(/^SP(\d+)$/i);
+
+    if (!match) {
+      continue;
+    }
+
+    const currentNumber = Number(match[1]);
+
+    if (!Number.isNaN(currentNumber) && currentNumber > maxNumber) {
+      maxNumber = currentNumber;
+    }
+  }
+
+  const nextNumber = maxNumber + 1;
+  return `SP${String(nextNumber).padStart(3, "0")}`;
 }
 
 function ensureDirSync(dirPath) {
@@ -158,37 +239,33 @@ app.get("/products", async (req, res) => {
     }
 
     const filter = buildCategoryFilter(req.query.category);
-    const minPrice =
-      req.query.minPrice !== undefined && req.query.minPrice !== ""
-        ? Number(req.query.minPrice)
+    const minStock =
+      req.query.minStock !== undefined && req.query.minStock !== ""
+        ? Number(req.query.minStock)
         : null;
-    const maxPrice =
-      req.query.maxPrice !== undefined && req.query.maxPrice !== ""
-        ? Number(req.query.maxPrice)
+    const maxStock =
+      req.query.maxStock !== undefined && req.query.maxStock !== ""
+        ? Number(req.query.maxStock)
         : null;
 
-    if (minPrice !== null || maxPrice !== null) {
-      filter.price = {};
+    if (minStock !== null || maxStock !== null) {
+      filter.stock = {};
 
-      if (minPrice !== null && !Number.isNaN(minPrice)) {
-        filter.price.$gte = minPrice;
+      if (minStock !== null && !Number.isNaN(minStock)) {
+        filter.stock.$gte = minStock;
       }
 
-      if (maxPrice !== null && !Number.isNaN(maxPrice)) {
-        filter.price.$lte = maxPrice;
+      if (maxStock !== null && !Number.isNaN(maxStock)) {
+        filter.stock.$lte = maxStock;
       }
 
-      if (Object.keys(filter.price).length === 0) {
-        delete filter.price;
+      if (Object.keys(filter.stock).length === 0) {
+        delete filter.stock;
       }
     }
 
     const items = await Product.find(filter).lean();
-    const mapped = items.map((item) => ({
-      ...item,
-      id: item._id.toString(),
-      image: normalizeImagePath(item.image),
-    }));
+    const mapped = items.map(mapProductResponse);
 
     return res.json(mapped);
   } catch (err) {
@@ -216,9 +293,7 @@ app.get("/products/:id", async (req, res) => {
     }
 
     return res.json({
-      ...product,
-      id: product._id.toString(),
-      image: normalizeImagePath(product.image),
+      ...mapProductResponse(product),
     });
   } catch (err) {
     console.error("Loi GET /products/:id:", err);
@@ -234,11 +309,7 @@ app.get("/products/category/:categoryId", async (req, res) => {
 
     const { categoryId } = req.params;
     const items = await Product.find(buildCategoryFilter(categoryId)).lean();
-    const mapped = items.map((item) => ({
-      ...item,
-      id: item._id.toString(),
-      image: normalizeImagePath(item.image),
-    }));
+    const mapped = items.map(mapProductResponse);
 
     return res.json(mapped);
   } catch (err) {
@@ -265,8 +336,9 @@ app.get("/products/search/keyword", async (req, res) => {
       const searchValues = [
         item.name,
         item.description,
+        item.type?.id,
+        item.type?.name,
         ...(Array.isArray(item.tags) ? item.tags : []),
-        ...(Array.isArray(item.events) ? item.events : []),
       ];
 
       return searchValues.some((searchValue) =>
@@ -274,11 +346,7 @@ app.get("/products/search/keyword", async (req, res) => {
       );
     });
 
-    const mapped = filteredItems.map((item) => ({
-      ...item,
-      id: item._id.toString(),
-      image: normalizeImagePath(item.image),
-    }));
+    const mapped = filteredItems.map(mapProductResponse);
 
     return res.json(mapped);
   } catch (err) {
@@ -302,11 +370,7 @@ app.get("/api/products", async (req, res) => {
     }
 
     const items = await Product.find(filter).lean();
-    const mapped = items.map((item) => ({
-      ...item,
-      id: item._id.toString(),
-      image: normalizeImagePath(item.image),
-    }));
+    const mapped = items.map(mapProductResponse);
 
     return res.json(mapped);
   } catch (err) {
@@ -334,9 +398,7 @@ app.get("/api/products/:id", async (req, res) => {
     }
 
     return res.json({
-      ...product,
-      id: product._id.toString(),
-      image: normalizeImagePath(product.image),
+      ...mapProductResponse(product),
     });
   } catch (err) {
     console.error(err);
@@ -354,7 +416,7 @@ app.post("/api/products", upload.single("imageFile"), async (req, res) => {
       req.body.image = `/images/${req.file.filename}`;
     }
 
-    const body = req.body || {};
+    const body = sanitizeProductBody(req.body);
 
     if (body.price !== undefined) {
       body.price = Number(body.price);
@@ -368,13 +430,6 @@ app.post("/api/products", upload.single("imageFile"), async (req, res) => {
       body.tags = body.tags.split(",").map((item) => item.trim()).filter(Boolean);
     }
 
-    if (body.events && typeof body.events === "string") {
-      body.events = body.events
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean);
-    }
-
     if (body.type && typeof body.type === "string") {
       try {
         body.type = JSON.parse(body.type);
@@ -383,13 +438,17 @@ app.post("/api/products", upload.single("imageFile"), async (req, res) => {
       }
     }
 
+    if (body.type && typeof body.type === "object") {
+      body.type = normalizeProductType(body.type);
+    }
+
+    body.id = await generateNextProductCode();
+
     const created = await Product.create(body);
     const object = created.toObject();
 
     return res.status(201).json({
-      ...object,
-      id: object._id.toString(),
-      image: normalizeImagePath(object.image),
+      ...mapProductResponse(object),
     });
   } catch (err) {
     if (err && err.name === "ValidationError") {
@@ -417,7 +476,7 @@ app.put("/api/products/:id", upload.single("imageFile"), async (req, res) => {
       req.body.image = `/images/${req.file.filename}`;
     }
 
-    const body = req.body || {};
+    const body = sanitizeProductBody(req.body);
 
     if (body.price !== undefined) {
       body.price = Number(body.price);
@@ -431,19 +490,16 @@ app.put("/api/products/:id", upload.single("imageFile"), async (req, res) => {
       body.tags = body.tags.split(",").map((item) => item.trim()).filter(Boolean);
     }
 
-    if (body.events && typeof body.events === "string") {
-      body.events = body.events
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean);
-    }
-
     if (body.type && typeof body.type === "string") {
       try {
         body.type = JSON.parse(body.type);
       } catch (e) {
         // Keep original value if parsing fails.
       }
+    }
+
+    if (body.type && typeof body.type === "object") {
+      body.type = normalizeProductType(body.type);
     }
 
     const updated = await Product.findByIdAndUpdate(id, body, {
@@ -458,9 +514,7 @@ app.put("/api/products/:id", upload.single("imageFile"), async (req, res) => {
     const object = updated.toObject ? updated.toObject() : updated;
 
     return res.json({
-      ...object,
-      id: object._id.toString(),
-      image: normalizeImagePath(object.image),
+      ...mapProductResponse(object),
     });
   } catch (err) {
     if (err && err.name === "ValidationError") {

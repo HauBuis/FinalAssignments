@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ProductList from "../components/ProductList";
 import SearchBar from "../components/SearchBar";
-import { API_BASE_URL } from "../utils/api";
-import { getCategoryLabel } from "../utils/categories";
+import { API_BASE_URL, getCategoryLabel } from "../components/productShared";
 
 function Products() {
   const location = useLocation();
@@ -14,10 +13,10 @@ function Products() {
   const searchParams = new URLSearchParams(location.search);
   const category = searchParams.get("category");
   const keyword = searchParams.get("value") || "";
-  const minPrice = searchParams.get("minPrice") || "";
-  const maxPrice = searchParams.get("maxPrice") || "";
+  const minStock = searchParams.get("minStock") || "";
+  const maxStock = searchParams.get("maxStock") || "";
   const isKeywordSearch = location.pathname === "/products/search/keyword";
-  const isPriceSearch = Boolean(minPrice || maxPrice);
+  const isStockSearch = Boolean(minStock || maxStock);
 
   useEffect(() => {
     async function loadProducts() {
@@ -58,15 +57,15 @@ function Products() {
       return;
     }
 
-    if (searchData.type === "price") {
+    if (searchData.type === "stock") {
       const params = new URLSearchParams();
 
-      if (searchData.minPrice !== "") {
-        params.set("minPrice", searchData.minPrice);
+      if (searchData.minStock !== "") {
+        params.set("minStock", searchData.minStock);
       }
 
-      if (searchData.maxPrice !== "") {
-        params.set("maxPrice", searchData.maxPrice);
+      if (searchData.maxStock !== "") {
+        params.set("maxStock", searchData.maxStock);
       }
 
       navigate(`/products${params.toString() ? `?${params.toString()}` : ""}`);
@@ -80,18 +79,22 @@ function Products() {
         : "Tìm kiếm sản phẩm";
     }
 
-    if (isPriceSearch) {
-      if (minPrice && maxPrice) {
-        return `Sản phẩm từ ${Number(minPrice).toLocaleString("vi-VN")} đến ${Number(
-          maxPrice
-        ).toLocaleString("vi-VN")} VND`;
+    if (isStockSearch) {
+      if (minStock && maxStock) {
+        return `Sản phẩm có tồn kho từ ${Number(minStock).toLocaleString(
+          "vi-VN"
+        )} đến ${Number(maxStock).toLocaleString("vi-VN")}`;
       }
 
-      if (minPrice) {
-        return `Sản phẩm từ ${Number(minPrice).toLocaleString("vi-VN")} VND`;
+      if (minStock) {
+        return `Sản phẩm có tồn kho từ ${Number(minStock).toLocaleString(
+          "vi-VN"
+        )}`;
       }
 
-      return `Sản phẩm đến ${Number(maxPrice).toLocaleString("vi-VN")} VND`;
+      return `Sản phẩm có tồn kho đến ${Number(maxStock).toLocaleString(
+        "vi-VN"
+      )}`;
     }
 
     if (category) {
@@ -106,8 +109,8 @@ function Products() {
       <h1>{getPageTitle()}</h1>
       <SearchBar
         initialKeyword={keyword}
-        initialMinPrice={minPrice}
-        initialMaxPrice={maxPrice}
+        initialMinStock={minStock}
+        initialMaxStock={maxStock}
         onSearch={handleSearch}
       />
 

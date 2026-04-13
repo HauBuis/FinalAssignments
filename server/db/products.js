@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 
 const ProductSchema = new mongoose.Schema(
   {
+    id: { type: String, trim: true, unique: true, sparse: true },
+
     name: { type: String, required: true, trim: true },
 
     description: { type: String },
@@ -18,8 +20,6 @@ const ProductSchema = new mongoose.Schema(
     },
 
     tags: [{ type: String }],
-
-    events: [{ type: String }],
   },
   {
     collection: "CakeCandy",

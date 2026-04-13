@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import * as XLSX from "xlsx";
-import { API_BASE_URL } from "../utils/api";
-import { PRODUCT_CATEGORIES } from "../utils/categories";
+import { API_BASE_URL, PRODUCT_CATEGORIES } from "./productShared";
+
+const CATEGORY_ALIASES = [
+  { value: "banh-ngot", label: "Bánh ngọt", ids: ["T01", "T02", "T04", "T05", "T06"] },
+  { value: "keo-ngot", label: "Kẹo ngọt", ids: ["T03", "T07"] },
+];
 
 function normalizeHeader(value) {
   return String(value || "")
@@ -57,6 +61,17 @@ function resolveCategory(rawType) {
   const normalizedType = normalizeCategoryValue(rawType);
 
   return (
+    CATEGORY_ALIASES.find((category) => {
+      const normalizedValue = normalizeCategoryValue(category.value);
+      const normalizedLabel = normalizeCategoryValue(category.label);
+      const normalizedIds = category.ids.map((id) => normalizeCategoryValue(id));
+
+      return (
+        normalizedType === normalizedValue ||
+        normalizedType === normalizedLabel ||
+        normalizedIds.includes(normalizedType)
+      );
+    }) ||
     PRODUCT_CATEGORIES.find((category) => {
       const normalizedValue = normalizeCategoryValue(category.value);
       const normalizedLabel = normalizeCategoryValue(category.label);
@@ -65,7 +80,8 @@ function resolveCategory(rawType) {
         normalizedType === normalizedValue ||
         normalizedType === normalizedLabel
       );
-    }) || null
+    }) ||
+    null
   );
 }
 
@@ -129,9 +145,6 @@ function mapRowToProduct(row, index) {
             price,
             stock,
             tags: parseList(getFieldValue(headerMap, ["tags", "tag"])),
-            events: parseList(
-              getFieldValue(headerMap, ["events", "event", "sukien"])
-            ),
             type: {
               id: matchedCategory.value,
               name: matchedCategory.label,
@@ -246,7 +259,7 @@ function ImportProductsAdmin({ onProductsImported, loading, setLoading }) {
       <div className="admin-import-note">
         <p>Hỗ trợ file `.csv`, `.xlsx`, `.xls`.</p>
         <p>Cột bắt buộc: `name`, `price`, `stock`, `type`.</p>
-        <p>Cột tùy chọn: `description`, `tags`, `events`.</p>
+        <p>Cột tùy chọn: `description`, `tags`.</p>
       </div>
 
       <div className="form-group">

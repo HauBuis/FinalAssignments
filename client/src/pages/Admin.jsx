@@ -4,7 +4,7 @@ import AddProductAdmin from "../components/AddProductAdmin";
 import DeleteProductAdmin from "../components/DeleteProductAdmin";
 import ImportProductsAdmin from "../components/ImportProductsAdmin";
 import UpdateProductAdmin from "../components/UpdateProductAdmin";
-import { API_BASE_URL } from "../utils/api";
+import { API_BASE_URL } from "../components/productShared";
 
 const DEFAULT_MODE = "add";
 

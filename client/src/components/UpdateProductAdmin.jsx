@@ -1,14 +1,17 @@
 import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../utils/api";
-import { PRODUCT_CATEGORIES } from "../utils/categories";
-import { getProductId } from "../utils/products";
 import {
   buildProductRequestData,
   createEmptyProductForm,
   mapProductToForm,
   validateProductForm,
-} from "../utils/productAdmin";
+} from "./productAdminShared";
+import {
+  API_BASE_URL,
+  getCategoryLabel,
+  getProductId,
+  PRODUCT_CATEGORIES,
+} from "./productShared";
 
 function UpdateProductAdmin({
   products,
@@ -195,16 +198,6 @@ function UpdateProductAdmin({
           </div>
 
           <div className="form-group">
-            <label>Sự kiện</label>
-            <input
-              type="text"
-              value={formData.events}
-              onChange={(event) => handleFieldChange("events", event.target.value)}
-              placeholder="Ví dụ: sinh nhật, kỷ niệm"
-            />
-          </div>
-
-          <div className="form-group">
             <label>Hình ảnh</label>
             <input type="file" accept="image/*" onChange={handleImageChange} />
             {imagePreview ? (
@@ -251,30 +244,30 @@ function UpdateProductAdmin({
                 const productId = getProductId(product);
 
                 return (
-                <tr
-                  key={productId}
-                  style={{
-                    backgroundColor:
-                      selectedProductId === productId
-                        ? "rgba(102, 126, 234, 0.1)"
-                        : "transparent",
-                  }}
-                >
-                  <td>{index + 1}</td>
-                  <td>{product.name}</td>
-                  <td>{Number(product.price).toLocaleString("vi-VN")} VND</td>
-                  <td>{product.stock}</td>
-                  <td>{product.type?.name || "-"}</td>
-                  <td>
-                    <button
-                      className="submit-btn"
-                      type="button"
-                      onClick={() => startEditProduct(product)}
-                    >
-                      Chọn để sửa
-                    </button>
-                  </td>
-                </tr>
+                  <tr
+                    key={productId}
+                    style={{
+                      backgroundColor:
+                        selectedProductId === productId
+                          ? "rgba(102, 126, 234, 0.1)"
+                          : "transparent",
+                    }}
+                  >
+                    <td>{index + 1}</td>
+                    <td>{product.name}</td>
+                    <td>{Number(product.price).toLocaleString("vi-VN")} VND</td>
+                    <td>{product.stock}</td>
+                    <td>{getCategoryLabel(product.type?.id) || "-"}</td>
+                    <td>
+                      <button
+                        className="submit-btn"
+                        type="button"
+                        onClick={() => startEditProduct(product)}
+                      >
+                        Chọn để sửa
+                      </button>
+                    </td>
+                  </tr>
                 );
               })}
             </tbody>

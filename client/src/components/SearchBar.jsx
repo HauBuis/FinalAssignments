@@ -2,14 +2,14 @@ import React, { useEffect, useState } from "react";
 
 function SearchBar({
   initialKeyword = "",
-  initialMinPrice = "",
-  initialMaxPrice = "",
+  initialMinStock = "",
+  initialMaxStock = "",
   onSearch,
 }) {
   const [searchType, setSearchType] = useState("keyword");
   const [keyword, setKeyword] = useState(initialKeyword);
-  const [minPrice, setMinPrice] = useState(initialMinPrice);
-  const [maxPrice, setMaxPrice] = useState(initialMaxPrice);
+  const [minStock, setMinStock] = useState(initialMinStock);
+  const [maxStock, setMaxStock] = useState(initialMaxStock);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -17,9 +17,9 @@ function SearchBar({
   }, [initialKeyword]);
 
   useEffect(() => {
-    setMinPrice(initialMinPrice);
-    setMaxPrice(initialMaxPrice);
-  }, [initialMinPrice, initialMaxPrice]);
+    setMinStock(initialMinStock);
+    setMaxStock(initialMaxStock);
+  }, [initialMinStock, initialMaxStock]);
 
   function handleSearch() {
     setMessage("");
@@ -32,41 +32,41 @@ function SearchBar({
       return;
     }
 
-    const normalizedMinPrice = minPrice.trim();
-    const normalizedMaxPrice = maxPrice.trim();
-    const parsedMinPrice =
-      normalizedMinPrice !== "" ? Number(normalizedMinPrice) : null;
-    const parsedMaxPrice =
-      normalizedMaxPrice !== "" ? Number(normalizedMaxPrice) : null;
+    const normalizedMinStock = minStock.trim();
+    const normalizedMaxStock = maxStock.trim();
+    const parsedMinStock =
+      normalizedMinStock !== "" ? Number(normalizedMinStock) : null;
+    const parsedMaxStock =
+      normalizedMaxStock !== "" ? Number(normalizedMaxStock) : null;
 
     if (
-      (parsedMinPrice !== null && parsedMinPrice < 1000) ||
-      (parsedMaxPrice !== null && parsedMaxPrice < 1000)
+      (parsedMinStock !== null && parsedMinStock < 0) ||
+      (parsedMaxStock !== null && parsedMaxStock < 0)
     ) {
-      setMessage("Giá nhập vào phải từ 1.000 VND trở lên.");
+      setMessage("Tồn kho không được nhỏ hơn 0.");
       return;
     }
 
     if (
-      normalizedMinPrice !== "" &&
-      normalizedMaxPrice !== "" &&
-      parsedMinPrice > parsedMaxPrice
+      normalizedMinStock !== "" &&
+      normalizedMaxStock !== "" &&
+      parsedMinStock > parsedMaxStock
     ) {
-      setMessage("Giá từ không được lớn hơn giá đến.");
+      setMessage("Tồn kho từ không được lớn hơn tồn kho đến.");
       return;
     }
 
     onSearch({
-      type: "price",
-      minPrice: normalizedMinPrice,
-      maxPrice: normalizedMaxPrice,
+      type: "stock",
+      minStock: normalizedMinStock,
+      maxStock: normalizedMaxStock,
     });
   }
 
   function handleReset() {
     setKeyword("");
-    setMinPrice("");
-    setMaxPrice("");
+    setMinStock("");
+    setMaxStock("");
     setMessage("");
     onSearch({ type: "reset" });
   }
@@ -89,14 +89,14 @@ function SearchBar({
         <label>
           <input
             type="radio"
-            value="price"
-            checked={searchType === "price"}
+            value="stock"
+            checked={searchType === "stock"}
             onChange={(event) => {
               setSearchType(event.target.value);
               setMessage("");
             }}
           />
-          Tìm theo khoảng giá
+          Tìm theo tồn kho
         </label>
       </div>
 
@@ -104,7 +104,7 @@ function SearchBar({
         <div className="search-input-group">
           <input
             type="text"
-            placeholder="Nhập tên sản phẩm hoặc từ khóa"
+            placeholder="Nhập tên, loại sản phẩm hoặc từ khóa"
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
             className="search-input"
@@ -119,21 +119,21 @@ function SearchBar({
         <div className="search-input-group">
           <input
             type="number"
-            placeholder="Giá từ"
-            value={minPrice}
-            onChange={(event) => setMinPrice(event.target.value)}
+            placeholder="Tồn kho từ"
+            value={minStock}
+            onChange={(event) => setMinStock(event.target.value)}
             className="search-input"
-            min="1000"
-            step="1000"
+            min="0"
+            step="1"
           />
           <input
             type="number"
-            placeholder="Giá đến"
-            value={maxPrice}
-            onChange={(event) => setMaxPrice(event.target.value)}
+            placeholder="Tồn kho đến"
+            value={maxStock}
+            onChange={(event) => setMaxStock(event.target.value)}
             className="search-input"
-            min="1000"
-            step="1000"
+            min="0"
+            step="1"
           />
         </div>
       )}

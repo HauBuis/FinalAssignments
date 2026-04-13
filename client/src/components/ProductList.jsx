@@ -1,6 +1,6 @@
 import React from "react";
 import ProductCard from "./ProductCard";
-import { getProductId } from "../utils/products";
+import { getProductId } from "./productShared";
 
 function ProductList({ products, onUpdate, onDelete }) {
   if (!products || products.length === 0) {

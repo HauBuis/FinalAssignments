@@ -1,4 +1,4 @@
-import { PRODUCT_CATEGORIES } from "./categories";
+import { PRODUCT_CATEGORIES } from "./productShared";
 
 export const EMPTY_PRODUCT_FORM = {
   name: "",
@@ -7,7 +7,6 @@ export const EMPTY_PRODUCT_FORM = {
   category: "",
   stock: "",
   tags: "",
-  events: "",
   imageFile: null,
 };
 
@@ -33,15 +32,26 @@ export function findCategoryByValue(categoryValue) {
   );
 }
 
+function mapTypeIdToCategoryValue(typeId) {
+  if (["T01", "T02", "T04", "T05", "T06"].includes(typeId)) {
+    return "banh-ngot";
+  }
+
+  if (["T03", "T07"].includes(typeId)) {
+    return "keo-ngot";
+  }
+
+  return typeId || "";
+}
+
 export function mapProductToForm(product) {
   return {
     name: product?.name || "",
     price: product?.price || "",
     description: product?.description || "",
-    category: product?.type?.id || "",
+    category: mapTypeIdToCategoryValue(product?.type?.id),
     stock: product?.stock || "",
     tags: toCommaSeparatedText(product?.tags),
-    events: toCommaSeparatedText(product?.events),
     imageFile: null,
   };
 }
@@ -79,7 +89,6 @@ export function buildProductRequestData(formData) {
   requestData.append("description", formData.description);
   requestData.append("stock", formData.stock);
   requestData.append("tags", toCommaSeparatedValue(formData.tags));
-  requestData.append("events", toCommaSeparatedValue(formData.events));
   requestData.append(
     "type",
     JSON.stringify({

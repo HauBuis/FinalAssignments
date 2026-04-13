@@ -3,8 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   API_BASE_URL,
   DEFAULT_PRODUCT_IMAGE,
+  getCategoryLabel,
   getImageUrl,
-} from "../utils/api";
+} from "./productShared";
 
 function formatBadgeLabel(value) {
   return String(value || "")
@@ -14,8 +15,14 @@ function formatBadgeLabel(value) {
 
 function getOccasionLabels(product) {
   const tags = Array.isArray(product?.tags) ? product.tags : [];
-
   return [...new Set(tags.map(formatBadgeLabel).filter(Boolean))];
+}
+
+function getDisplayCategory(product) {
+  const categoryId =
+    typeof product?.type === "object" ? product?.type?.id : product?.type;
+
+  return categoryId ? getCategoryLabel(categoryId) : "";
 }
 
 function ProductDetail() {
@@ -71,6 +78,7 @@ function ProductDetail() {
 
   const imageUrl = getImageUrl(product.image || DEFAULT_PRODUCT_IMAGE);
   const occasionLabels = getOccasionLabels(product);
+  const categoryLabel = getDisplayCategory(product);
 
   return (
     <div className="product-detail-page">
@@ -97,21 +105,21 @@ function ProductDetail() {
             Tồn kho: <strong>{product.stock}</strong>
           </p>
 
-          {product.description && (
+          {product.description ? (
             <div className="detail-description">
               <h3>Mô tả sản phẩm</h3>
               <p>{product.description}</p>
             </div>
-          )}
+          ) : null}
 
-          {product.type && (
+          {categoryLabel ? (
             <div className="detail-type">
               <h3>Loại sản phẩm</h3>
-              <p>{product.type?.name || product.type}</p>
+              <p>{categoryLabel}</p>
             </div>
-          )}
+          ) : null}
 
-          {occasionLabels.length > 0 && (
+          {occasionLabels.length > 0 ? (
             <div className="detail-occasions">
               <h3>Phù hợp cho</h3>
               <div className="occasions-list">
@@ -122,7 +130,7 @@ function ProductDetail() {
                 ))}
               </div>
             </div>
-          )}
+          ) : null}
 
           {Number(product.stock) <= 0 ? (
             <p className="out-of-stock">Hết hàng</p>

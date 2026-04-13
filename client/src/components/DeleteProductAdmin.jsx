@@ -1,6 +1,5 @@
 import React from "react";
-import { API_BASE_URL } from "../utils/api";
-import { getProductId } from "../utils/products";
+import { API_BASE_URL, getProductId } from "./productShared";
 
 function DeleteProductAdmin({
   products,

@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DEFAULT_PRODUCT_IMAGE, getImageUrl } from "../utils/api";
-import { getProductId } from "../utils/products";
+import {
+  DEFAULT_PRODUCT_IMAGE,
+  getImageUrl,
+  getProductId,
+} from "./productShared";
 
 function ProductCard({ product, onUpdate, onDelete }) {
   const navigate = useNavigate();

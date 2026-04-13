@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../utils/api";
-import { PRODUCT_CATEGORIES } from "../utils/categories";
-import { getProductId } from "../utils/products";
 import {
   buildProductRequestData,
   createEmptyProductForm,
   validateProductForm,
-} from "../utils/productAdmin";
+} from "./productAdminShared";
+import {
+  API_BASE_URL,
+  getProductId,
+  PRODUCT_CATEGORIES,
+} from "./productShared";
 
 function AddProductAdmin({ onProductAdded, loading, setLoading }) {
   const navigate = useNavigate();
@@ -152,16 +154,6 @@ function AddProductAdmin({ onProductAdded, loading, setLoading }) {
             value={formData.tags}
             onChange={(event) => handleFieldChange("tags", event.target.value)}
             placeholder="Ví dụ: sinh nhật, tặng quà"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Sự kiện</label>
-          <input
-            type="text"
-            value={formData.events}
-            onChange={(event) => handleFieldChange("events", event.target.value)}
-            placeholder="Ví dụ: sinh nhật, kỷ niệm"
           />
         </div>
 

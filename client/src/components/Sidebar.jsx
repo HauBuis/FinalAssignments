@@ -45,7 +45,7 @@ function Sidebar({ currentPage }) {
           >
             <span>Sản phẩm</span>
             <span className={`chevron ${expandedMenu === "products" ? "open" : ""}`}>
-              v
+              
             </span>
           </button>
 
@@ -80,7 +80,7 @@ function Sidebar({ currentPage }) {
           >
             <span>Admin</span>
             <span className={`chevron ${expandedMenu === "admin" ? "open" : ""}`}>
-              v
+              
             </span>
           </button>
 
