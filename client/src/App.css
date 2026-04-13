@@ -1037,6 +1037,31 @@ html, body, #root {
   background: #f9f9f9;
 }
 
+.admin-import-note,
+.admin-import-summary,
+.admin-import-errors,
+.admin-import-result {
+  margin-bottom: 16px;
+}
+
+.admin-import-note p,
+.admin-import-summary p,
+.admin-import-result p,
+.admin-import-errors ul,
+.admin-import-result ul {
+  margin: 6px 0;
+}
+
+.admin-import-errors ul,
+.admin-import-result ul {
+  padding-left: 18px;
+}
+
+.import-file-name {
+  margin: 10px 0 16px;
+  font-weight: bold;
+}
+
 .delete-btn {
   padding: 6px 12px;
   background: #e74c3c;

@@ -1,81 +1,55 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../utils/api";
 import { PRODUCT_CATEGORIES } from "../utils/categories";
+import { getProductId } from "../utils/products";
+import {
+  buildProductRequestData,
+  createEmptyProductForm,
+  validateProductForm,
+} from "../utils/productAdmin";
 
 function AddProductAdmin({ onProductAdded, loading, setLoading }) {
-  const [formData, setFormData] = useState({
-    name: "",
-    price: "",
-    description: "",
-    category: "",
-    stock: "",
-    tags: "",
-    events: "",
-    imageFile: null,
-  });
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState(createEmptyProductForm);
   const [imagePreview, setImagePreview] = useState(null);
+
+  function handleFieldChange(field, value) {
+    setFormData((current) => ({ ...current, [field]: value }));
+  }
+
+  function handleImageChange(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      handleFieldChange("imageFile", null);
+      setImagePreview(null);
+      return;
+    }
+
+    handleFieldChange("imageFile", file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result);
+    reader.readAsDataURL(file);
+  }
 
   async function handleAddProduct(event) {
     event.preventDefault();
 
-    if (!formData.name.trim() || formData.price === "") {
-      alert("Vui lòng nhập tên và giá.");
-      return;
-    }
+    const validationMessage = validateProductForm(formData);
 
-    if (formData.stock === "") {
-      alert("Vui lòng nhập tồn kho.");
-      return;
-    }
-
-    if (!formData.category) {
-      alert("Vui lòng chọn loại sản phẩm.");
+    if (validationMessage) {
+      alert(validationMessage);
       return;
     }
 
     try {
       setLoading(true);
 
-      const selectedCategory = PRODUCT_CATEGORIES.find(
-        (item) => item.value === formData.category
-      );
-
-      const requestData = new FormData();
-      requestData.append("name", formData.name);
-      requestData.append("price", formData.price);
-      requestData.append("description", formData.description);
-      requestData.append("stock", formData.stock);
-      requestData.append(
-        "tags",
-        formData.tags
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter(Boolean)
-          .join(",")
-      );
-      requestData.append(
-        "events",
-        formData.events
-          .split(",")
-          .map((event) => event.trim())
-          .filter(Boolean)
-          .join(",")
-      );
-      requestData.append(
-        "type",
-        JSON.stringify({
-          id: formData.category,
-          name: selectedCategory ? selectedCategory.label : "",
-        })
-      );
-
-      if (formData.imageFile) {
-        requestData.append("imageFile", formData.imageFile);
-      }
-
       const response = await fetch(`${API_BASE_URL}/api/products`, {
         method: "POST",
-        body: requestData,
+        body: buildProductRequestData(formData),
       });
 
       if (!response.ok) {
@@ -83,40 +57,22 @@ function AddProductAdmin({ onProductAdded, loading, setLoading }) {
         throw new Error(errorData.message || "Tạo sản phẩm thất bại.");
       }
 
+      const createdProduct = await response.json().catch(() => null);
+      const createdProductId = getProductId(createdProduct);
+
       alert("Thêm sản phẩm thành công.");
-      setFormData({
-        name: "",
-        price: "",
-        description: "",
-        category: "",
-        stock: "",
-        tags: "",
-        events: "",
-        imageFile: null,
-      });
+      setFormData(createEmptyProductForm());
       setImagePreview(null);
-      onProductAdded();
-    } catch (err) {
-      alert(`Lỗi: ${err.message}`);
+      await onProductAdded?.();
+
+      if (createdProductId) {
+        navigate(`/products/${createdProductId}`);
+      }
+    } catch (error) {
+      alert(`Lỗi: ${error.message}`);
     } finally {
       setLoading(false);
     }
-  }
-
-  function handleImageChange(event) {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      setFormData({ ...formData, imageFile: null });
-      setImagePreview(null);
-      return;
-    }
-
-    setFormData({ ...formData, imageFile: file });
-
-    const reader = new FileReader();
-    reader.onloadend = () => setImagePreview(reader.result);
-    reader.readAsDataURL(file);
   }
 
   return (
@@ -129,9 +85,7 @@ function AddProductAdmin({ onProductAdded, loading, setLoading }) {
           <input
             type="text"
             value={formData.name}
-            onChange={(event) =>
-              setFormData({ ...formData, name: event.target.value })
-            }
+            onChange={(event) => handleFieldChange("name", event.target.value)}
             placeholder="Nhập tên sản phẩm"
             required
           />
@@ -142,7 +96,7 @@ function AddProductAdmin({ onProductAdded, loading, setLoading }) {
           <textarea
             value={formData.description}
             onChange={(event) =>
-              setFormData({ ...formData, description: event.target.value })
+              handleFieldChange("description", event.target.value)
             }
             placeholder="Nhập mô tả sản phẩm"
             rows="4"
@@ -154,9 +108,7 @@ function AddProductAdmin({ onProductAdded, loading, setLoading }) {
           <input
             type="number"
             value={formData.price}
-            onChange={(event) =>
-              setFormData({ ...formData, price: event.target.value })
-            }
+            onChange={(event) => handleFieldChange("price", event.target.value)}
             placeholder="Nhập giá"
             min="0"
             required
@@ -168,9 +120,7 @@ function AddProductAdmin({ onProductAdded, loading, setLoading }) {
           <input
             type="number"
             value={formData.stock}
-            onChange={(event) =>
-              setFormData({ ...formData, stock: event.target.value })
-            }
+            onChange={(event) => handleFieldChange("stock", event.target.value)}
             placeholder="Nhập số lượng tồn kho"
             min="0"
             required
@@ -182,7 +132,7 @@ function AddProductAdmin({ onProductAdded, loading, setLoading }) {
           <select
             value={formData.category}
             onChange={(event) =>
-              setFormData({ ...formData, category: event.target.value })
+              handleFieldChange("category", event.target.value)
             }
             required
           >
@@ -200,9 +150,7 @@ function AddProductAdmin({ onProductAdded, loading, setLoading }) {
           <input
             type="text"
             value={formData.tags}
-            onChange={(event) =>
-              setFormData({ ...formData, tags: event.target.value })
-            }
+            onChange={(event) => handleFieldChange("tags", event.target.value)}
             placeholder="Ví dụ: sinh nhật, tặng quà"
           />
         </div>
@@ -212,9 +160,7 @@ function AddProductAdmin({ onProductAdded, loading, setLoading }) {
           <input
             type="text"
             value={formData.events}
-            onChange={(event) =>
-              setFormData({ ...formData, events: event.target.value })
-            }
+            onChange={(event) => handleFieldChange("events", event.target.value)}
             placeholder="Ví dụ: sinh nhật, kỷ niệm"
           />
         </div>
@@ -222,7 +168,7 @@ function AddProductAdmin({ onProductAdded, loading, setLoading }) {
         <div className="form-group">
           <label>Hình ảnh</label>
           <input type="file" accept="image/*" onChange={handleImageChange} />
-          {imagePreview && (
+          {imagePreview ? (
             <div style={{ marginTop: "10px" }}>
               <img
                 src={imagePreview}
@@ -236,7 +182,7 @@ function AddProductAdmin({ onProductAdded, loading, setLoading }) {
                 }}
               />
             </div>
-          )}
+          ) : null}
         </div>
 
         <button type="submit" disabled={loading} className="submit-btn">

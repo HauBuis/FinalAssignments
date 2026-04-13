@@ -1,5 +1,6 @@
 import React from "react";
 import ProductCard from "./ProductCard";
+import { getProductId } from "../utils/products";
 
 function ProductList({ products, onUpdate, onDelete }) {
   if (!products || products.length === 0) {
@@ -10,7 +11,7 @@ function ProductList({ products, onUpdate, onDelete }) {
     <section className="product-list">
       {products.map((product) => (
         <ProductCard
-          key={product.id || product._id}
+          key={getProductId(product)}
           product={product}
           onUpdate={onUpdate}
           onDelete={onDelete}

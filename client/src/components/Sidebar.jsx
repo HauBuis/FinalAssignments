@@ -101,6 +101,12 @@ function Sidebar({ currentPage }) {
               >
                 Xóa sản phẩm
               </button>
+              <button
+                className="submenu-link"
+                onClick={() => navigate("/admin/import")}
+              >
+                Import sản phẩm
+              </button>
             </div>
           )}
         </div>

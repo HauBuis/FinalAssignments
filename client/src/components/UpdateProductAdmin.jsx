@@ -1,6 +1,14 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../utils/api";
 import { PRODUCT_CATEGORIES } from "../utils/categories";
+import { getProductId } from "../utils/products";
+import {
+  buildProductRequestData,
+  createEmptyProductForm,
+  mapProductToForm,
+  validateProductForm,
+} from "../utils/productAdmin";
 
 function UpdateProductAdmin({
   products,
@@ -8,32 +16,50 @@ function UpdateProductAdmin({
   loading,
   setLoading,
 }) {
+  const navigate = useNavigate();
+  const formSectionRef = useRef(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    price: "",
-    description: "",
-    category: "",
-    stock: "",
-    tags: "",
-    events: "",
-    imageFile: null,
-  });
+  const [formData, setFormData] = useState(createEmptyProductForm);
+  const selectedProductId = getProductId(selectedProduct);
+
+  function resetForm() {
+    setSelectedProduct(null);
+    setImagePreview(null);
+    setFormData(createEmptyProductForm());
+  }
+
+  function handleFieldChange(field, value) {
+    setFormData((current) => ({ ...current, [field]: value }));
+  }
 
   function startEditProduct(product) {
     setSelectedProduct(product);
-    setFormData({
-      name: product.name || "",
-      price: product.price || "",
-      description: product.description || "",
-      category: product.type?.id || "",
-      stock: product.stock || "",
-      tags: (product.tags || []).join(", "),
-      events: (product.events || []).join(", "),
-      imageFile: null,
-    });
+    setFormData(mapProductToForm(product));
     setImagePreview(null);
+
+    requestAnimationFrame(() => {
+      formSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
+
+  function handleImageChange(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      handleFieldChange("imageFile", null);
+      setImagePreview(null);
+      return;
+    }
+
+    handleFieldChange("imageFile", file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result);
+    reader.readAsDataURL(file);
   }
 
   async function handleUpdateProduct(event) {
@@ -44,66 +70,21 @@ function UpdateProductAdmin({
       return;
     }
 
-    if (!formData.name.trim() || formData.price === "") {
-      alert("Vui lòng nhập tên và giá.");
-      return;
-    }
+    const validationMessage = validateProductForm(formData);
 
-    if (formData.stock === "") {
-      alert("Vui lòng nhập tồn kho.");
-      return;
-    }
-
-    if (!formData.category) {
-      alert("Vui lòng chọn loại sản phẩm.");
+    if (validationMessage) {
+      alert(validationMessage);
       return;
     }
 
     try {
       setLoading(true);
 
-      const selectedCategory = PRODUCT_CATEGORIES.find(
-        (item) => item.value === formData.category
-      );
-
-      const requestData = new FormData();
-      requestData.append("name", formData.name);
-      requestData.append("price", formData.price);
-      requestData.append("description", formData.description);
-      requestData.append("stock", formData.stock);
-      requestData.append(
-        "tags",
-        formData.tags
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter(Boolean)
-          .join(",")
-      );
-      requestData.append(
-        "events",
-        formData.events
-          .split(",")
-          .map((event) => event.trim())
-          .filter(Boolean)
-          .join(",")
-      );
-      requestData.append(
-        "type",
-        JSON.stringify({
-          id: formData.category,
-          name: selectedCategory ? selectedCategory.label : "",
-        })
-      );
-
-      if (formData.imageFile) {
-        requestData.append("imageFile", formData.imageFile);
-      }
-
       const response = await fetch(
-        `${API_BASE_URL}/api/products/${selectedProduct.id}`,
+        `${API_BASE_URL}/api/products/${getProductId(selectedProduct)}`,
         {
           method: "PUT",
-          body: requestData,
+          body: buildProductRequestData(formData),
         }
       );
 
@@ -112,45 +93,26 @@ function UpdateProductAdmin({
         throw new Error(errorData.message || "Cập nhật sản phẩm thất bại.");
       }
 
+      const updatedProduct = await response.json().catch(() => null);
+      const updatedProductId =
+        getProductId(updatedProduct) || getProductId(selectedProduct);
+
       alert("Cập nhật sản phẩm thành công.");
-      setSelectedProduct(null);
-      setImagePreview(null);
-      setFormData({
-        name: "",
-        price: "",
-        description: "",
-        category: "",
-        stock: "",
-        tags: "",
-        events: "",
-        imageFile: null,
-      });
-      onProductUpdated();
-    } catch (err) {
-      alert(`Lỗi: ${err.message}`);
+      resetForm();
+      await onProductUpdated?.();
+
+      if (updatedProductId) {
+        navigate(`/products/${updatedProductId}`);
+      }
+    } catch (error) {
+      alert(`Lỗi: ${error.message}`);
     } finally {
       setLoading(false);
     }
   }
 
-  function handleImageChange(event) {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      setFormData({ ...formData, imageFile: null });
-      setImagePreview(null);
-      return;
-    }
-
-    setFormData({ ...formData, imageFile: file });
-
-    const reader = new FileReader();
-    reader.onloadend = () => setImagePreview(reader.result);
-    reader.readAsDataURL(file);
-  }
-
   return (
-    <section className="admin-form-section">
+    <section className="admin-form-section" ref={formSectionRef}>
       <h2>Cập nhật sản phẩm</h2>
 
       {!selectedProduct ? (
@@ -162,9 +124,7 @@ function UpdateProductAdmin({
             <input
               type="text"
               value={formData.name}
-              onChange={(event) =>
-                setFormData({ ...formData, name: event.target.value })
-              }
+              onChange={(event) => handleFieldChange("name", event.target.value)}
               placeholder="Nhập tên sản phẩm"
               required
             />
@@ -175,7 +135,7 @@ function UpdateProductAdmin({
             <textarea
               value={formData.description}
               onChange={(event) =>
-                setFormData({ ...formData, description: event.target.value })
+                handleFieldChange("description", event.target.value)
               }
               placeholder="Nhập mô tả sản phẩm"
               rows="4"
@@ -187,9 +147,7 @@ function UpdateProductAdmin({
             <input
               type="number"
               value={formData.price}
-              onChange={(event) =>
-                setFormData({ ...formData, price: event.target.value })
-              }
+              onChange={(event) => handleFieldChange("price", event.target.value)}
               placeholder="Nhập giá"
               min="0"
               required
@@ -201,9 +159,7 @@ function UpdateProductAdmin({
             <input
               type="number"
               value={formData.stock}
-              onChange={(event) =>
-                setFormData({ ...formData, stock: event.target.value })
-              }
+              onChange={(event) => handleFieldChange("stock", event.target.value)}
               placeholder="Nhập số lượng tồn kho"
               min="0"
               required
@@ -215,7 +171,7 @@ function UpdateProductAdmin({
             <select
               value={formData.category}
               onChange={(event) =>
-                setFormData({ ...formData, category: event.target.value })
+                handleFieldChange("category", event.target.value)
               }
               required
             >
@@ -233,9 +189,7 @@ function UpdateProductAdmin({
             <input
               type="text"
               value={formData.tags}
-              onChange={(event) =>
-                setFormData({ ...formData, tags: event.target.value })
-              }
+              onChange={(event) => handleFieldChange("tags", event.target.value)}
               placeholder="Ví dụ: sinh nhật, tặng quà"
             />
           </div>
@@ -245,9 +199,7 @@ function UpdateProductAdmin({
             <input
               type="text"
               value={formData.events}
-              onChange={(event) =>
-                setFormData({ ...formData, events: event.target.value })
-              }
+              onChange={(event) => handleFieldChange("events", event.target.value)}
               placeholder="Ví dụ: sinh nhật, kỷ niệm"
             />
           </div>
@@ -255,7 +207,7 @@ function UpdateProductAdmin({
           <div className="form-group">
             <label>Hình ảnh</label>
             <input type="file" accept="image/*" onChange={handleImageChange} />
-            {imagePreview && (
+            {imagePreview ? (
               <div style={{ marginTop: "10px" }}>
                 <img
                   src={imagePreview}
@@ -269,7 +221,7 @@ function UpdateProductAdmin({
                   }}
                 />
               </div>
-            )}
+            ) : null}
           </div>
 
           <button type="submit" disabled={loading} className="submit-btn">
@@ -286,6 +238,7 @@ function UpdateProductAdmin({
           <table>
             <thead>
               <tr>
+                <th>STT</th>
                 <th>Tên</th>
                 <th>Giá</th>
                 <th>Tồn kho</th>
@@ -294,16 +247,20 @@ function UpdateProductAdmin({
               </tr>
             </thead>
             <tbody>
-              {products.map((product) => (
+              {products.map((product, index) => {
+                const productId = getProductId(product);
+
+                return (
                 <tr
-                  key={product.id}
+                  key={productId}
                   style={{
                     backgroundColor:
-                      selectedProduct?.id === product.id
+                      selectedProductId === productId
                         ? "rgba(102, 126, 234, 0.1)"
                         : "transparent",
                   }}
                 >
+                  <td>{index + 1}</td>
                   <td>{product.name}</td>
                   <td>{Number(product.price).toLocaleString("vi-VN")} VND</td>
                   <td>{product.stock}</td>
@@ -318,7 +275,8 @@ function UpdateProductAdmin({
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

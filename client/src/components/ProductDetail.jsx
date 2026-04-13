@@ -14,9 +14,8 @@ function formatBadgeLabel(value) {
 
 function getOccasionLabels(product) {
   const tags = Array.isArray(product?.tags) ? product.tags : [];
-  const events = Array.isArray(product?.events) ? product.events : [];
 
-  return [...new Set([...events, ...tags].map(formatBadgeLabel).filter(Boolean))];
+  return [...new Set(tags.map(formatBadgeLabel).filter(Boolean))];
 }
 
 function ProductDetail() {

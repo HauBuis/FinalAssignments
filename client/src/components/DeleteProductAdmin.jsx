@@ -1,5 +1,6 @@
 import React from "react";
 import { API_BASE_URL } from "../utils/api";
+import { getProductId } from "../utils/products";
 
 function DeleteProductAdmin({
   products,
@@ -24,9 +25,9 @@ function DeleteProductAdmin({
       }
 
       alert("Xóa sản phẩm thành công.");
-      onProductDeleted();
-    } catch (err) {
-      alert(`Lỗi: ${err.message}`);
+      await onProductDeleted?.();
+    } catch (error) {
+      alert(`Lỗi: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -46,6 +47,7 @@ function DeleteProductAdmin({
             <table>
               <thead>
                 <tr>
+                  <th>STT</th>
                   <th>Tên</th>
                   <th>Giá</th>
                   <th>Tồn kho</th>
@@ -54,8 +56,9 @@ function DeleteProductAdmin({
                 </tr>
               </thead>
               <tbody>
-                {products.map((product) => (
-                  <tr key={product.id}>
+                {products.map((product, index) => (
+                  <tr key={getProductId(product)}>
+                    <td>{index + 1}</td>
                     <td>{product.name}</td>
                     <td>{Number(product.price).toLocaleString("vi-VN")} VND</td>
                     <td>{product.stock}</td>
@@ -67,7 +70,7 @@ function DeleteProductAdmin({
                     <td>
                       <button
                         className="delete-btn"
-                        onClick={() => handleDeleteProduct(product.id)}
+                        onClick={() => handleDeleteProduct(getProductId(product))}
                         disabled={loading}
                       >
                         {loading ? "Đang xóa..." : "Xóa"}

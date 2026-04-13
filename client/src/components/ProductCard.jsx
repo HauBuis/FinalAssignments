@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DEFAULT_PRODUCT_IMAGE, getImageUrl } from "../utils/api";
+import { getProductId } from "../utils/products";
 
 function ProductCard({ product, onUpdate, onDelete }) {
   const navigate = useNavigate();
-  const productId = product?.id || product?._id;
+  const productId = getProductId(product);
   const isAdminMode = Boolean(onUpdate && onDelete);
 
   const [isEditing, setIsEditing] = useState(false);
